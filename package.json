@@ -7,9 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "vitest run"
+    "test": "vitest run",
+    "ingest:tourapi": "node scripts/ingest-tourapi.mjs"
   },
   "dependencies": {
+    "@huggingface/transformers": "^4.2.0",
     "@supabase/ssr": "^0.12.3",
     "@supabase/supabase-js": "^2.110.6",
     "next": "16.2.10",
@@ -26,5 +28,11 @@
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.10"
+  },
+  "allowScripts": {
+    "onnxruntime-node@1.24.3": true,
+    "protobufjs@7.6.5": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true
   }
 }
