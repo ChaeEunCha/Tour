@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { Splash } from "@/components/layout/Splash";
 
 export const metadata: Metadata = {
   title: "어디있을까?",
@@ -14,6 +15,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col font-sans bg-bg text-text">
+        <Splash />
         {children}
       </body>
     </html>
