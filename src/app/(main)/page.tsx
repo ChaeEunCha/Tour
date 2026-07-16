@@ -6,7 +6,7 @@ export default function HomePage() {
     <div className="flex flex-1 flex-col justify-center gap-8">
       <Mascot size={132} className="self-center" />
 
-      <div>
+      <div className="text-center">
         <p className="font-display font-bold text-2xl text-balance">
           어디였는지, 사진 한 장이면 충분해요
         </p>
