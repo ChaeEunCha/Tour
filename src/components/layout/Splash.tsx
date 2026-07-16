@@ -11,13 +11,12 @@ export function Splash() {
   const [fading, setFading] = useState(false);
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setVisible(false);
-      return;
-    }
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const displayMs = reduced ? 0 : DISPLAY_MS;
+    const fadeMs = reduced ? 0 : FADE_MS;
 
-    const fadeTimer = setTimeout(() => setFading(true), DISPLAY_MS);
-    const hideTimer = setTimeout(() => setVisible(false), DISPLAY_MS + FADE_MS);
+    const fadeTimer = setTimeout(() => setFading(true), displayMs);
+    const hideTimer = setTimeout(() => setVisible(false), displayMs + fadeMs);
 
     return () => {
       clearTimeout(fadeTimer);

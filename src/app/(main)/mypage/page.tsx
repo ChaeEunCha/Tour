@@ -27,8 +27,11 @@ export default function MyPage() {
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<SavedType>("place");
   const [items, setItems] = useState<SavedPlaceRow[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
+
+  const requestKey = user ? `${user.id}:${activeTab}` : null;
+  const loading = requestKey !== null && requestKey !== loadedFor;
 
   useEffect(() => {
     const supabase = createClient();
@@ -39,11 +42,9 @@ export default function MyPage() {
   }, []);
 
   useEffect(() => {
-    if (!user) return;
+    if (!user || requestKey === null) return;
 
     let cancelled = false;
-    setLoading(true);
-
     const supabase = createClient();
     supabase
       .from("saved_places")
@@ -55,13 +56,13 @@ export default function MyPage() {
       .then(({ data }) => {
         if (cancelled) return;
         setItems(data ?? []);
-        setLoading(false);
+        setLoadedFor(requestKey);
       });
 
     return () => {
       cancelled = true;
     };
-  }, [user, activeTab]);
+  }, [user, activeTab, requestKey]);
 
   async function handleRemove(savedId: string) {
     setRemovingId(savedId);
