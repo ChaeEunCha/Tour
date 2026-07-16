@@ -1,8 +1,11 @@
 import { HomeActionCard } from "@/components/layout/HomeActionCard";
+import { Mascot } from "@/components/layout/Mascot";
 
 export default function HomePage() {
   return (
     <div className="flex flex-1 flex-col justify-center gap-8">
+      <Mascot size={132} className="self-center" />
+
       <div>
         <p className="font-display font-bold text-2xl text-balance">
           어디였는지, 사진 한 장이면 충분해요
