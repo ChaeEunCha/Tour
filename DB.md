@@ -1,3 +1,4 @@
+
 # 어디있을까 (Where Is It) — DB 설계
 
 > 출처: [PRD.md](./PRD.md) §8 Supabase 데이터베이스 설계
