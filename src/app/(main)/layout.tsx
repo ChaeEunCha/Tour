@@ -1,3 +1,4 @@
+import { TopBar } from "@/components/layout/TopBar";
 import { BottomNav } from "@/components/layout/BottomNav";
 
 export default function MainLayout({
@@ -5,7 +6,8 @@ export default function MainLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="flex-1 w-full max-w-[480px] mx-auto px-6 py-10">
+      <TopBar />
+      <div className="flex flex-1 flex-col w-full max-w-[480px] mx-auto px-6 py-6">
         {children}
       </div>
       <BottomNav />
