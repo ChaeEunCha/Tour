@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { SplashScreen } from "@/components/layout/SplashScreen";
 
 interface ImageUploaderProps {
   onSubmit: (file: File) => Promise<void>;
@@ -41,6 +42,7 @@ export function ImageUploader({ onSubmit, submitLabel }: ImageUploaderProps) {
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-4">
+      {isSubmitting && <SplashScreen message="장소를 찾고 있어요!" loading />}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
