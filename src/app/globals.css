@@ -1,26 +1,45 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --raw-bg: #fffbf8;
+  --raw-bg-raised: #fff4ec;
+  --raw-text: #2b2320;
+  --raw-text-muted: #6b5a4e;
+  --raw-border: #ecdfd3;
+  --raw-primary: #f2704f;
+  --raw-primary-hover: #dc5c3b;
+  --raw-accent: #1e8a82;
+  --raw-accent-soft: #e4f3f1;
+  --raw-success: #2e9e5b;
+  --raw-success-soft: #e4f3ea;
+  --raw-similar-fg: #c1502f;
+  --raw-similar-bg: #fdeae4;
+  --raw-low-bg: #f1ece7;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --color-bg: var(--raw-bg);
+  --color-bg-raised: var(--raw-bg-raised);
+  --color-text: var(--raw-text);
+  --color-text-muted: var(--raw-text-muted);
+  --color-border: var(--raw-border);
+  --color-primary: var(--raw-primary);
+  --color-primary-hover: var(--raw-primary-hover);
+  --color-accent: var(--raw-accent);
+  --color-accent-soft: var(--raw-accent-soft);
+  --color-success: var(--raw-success);
+  --color-success-soft: var(--raw-success-soft);
+  --color-similar-fg: var(--raw-similar-fg);
+  --color-similar-bg: var(--raw-similar-bg);
+  --color-low-bg: var(--raw-low-bg);
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-display: "Avenir Next", "Century Gothic", "Futura", sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo",
+    "Malgun Gothic", "Noto Sans KR", sans-serif;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
 }
