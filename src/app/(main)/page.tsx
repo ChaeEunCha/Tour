@@ -2,7 +2,7 @@ import { HomeActionCard } from "@/components/layout/HomeActionCard";
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-1 flex-col justify-center gap-8">
       <div>
         <p className="font-display font-bold text-2xl text-balance">
           어디였는지, 사진 한 장이면 충분해요
