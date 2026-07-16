@@ -1,4 +1,4 @@
-export { TourApiError } from "./client";
+export { TourApiError as GalleryApiError } from "./gallery-client";
 export {
   getGalleryList,
   getGalleryDetailList,
@@ -18,4 +18,4 @@ export type {
   GalleryListResult,
   TourApiHeader,
   TourApiResponse,
-} from "./types";
+} from "./gallery-types";

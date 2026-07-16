@@ -25,10 +25,8 @@ const nextConfig: NextConfig = {
         : []),
       // 관광지 참고 이미지는 TourAPI(한국관광공사)의 원본 CDN URL을 그대로 저장한다
       // (scripts/ingest-tourapi.mjs 참고) — Supabase Storage로 재업로드하지 않음.
-      {
-        protocol: "http" as const,
-        hostname: "tong.visitkorea.or.kr",
-      },
+      { protocol: "http" as const, hostname: "tong.visitkorea.or.kr" },
+      { protocol: "https" as const, hostname: "tong.visitkorea.or.kr" },
     ],
   },
 };

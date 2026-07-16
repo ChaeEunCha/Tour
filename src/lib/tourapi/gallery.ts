@@ -1,5 +1,10 @@
-import { callGalleryApi, normalizeItems } from "./client";
-import type { GalleryItem, GalleryListResult, GallerySyncItem, TourApiBody } from "./types";
+import { callGalleryApi, normalizeItems } from "./gallery-client";
+import type {
+  GalleryItem,
+  GalleryListResult,
+  GallerySyncItem,
+  TourApiBody,
+} from "./gallery-types";
 
 /** 정렬 구분 : A=촬영일, B=제목, C=수정일 */
 export type GalleryArrange = "A" | "B" | "C";

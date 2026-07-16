@@ -1,64 +1,56 @@
-import type { TourApiBody, TourApiResponse } from "./types";
+import type { TourApiFlatError, TourApiResponse } from "./types";
 
-const BASE_URL = "https://apis.data.go.kr/B551011/PhotoGalleryService1";
-const SUCCESS_CODE = "00";
+const TOUR_API_BASE_URL = "https://apis.data.go.kr/B551011/KorService2";
 
 export class TourApiError extends Error {
-  constructor(
-    public readonly resultCode: string,
-    message: string,
-  ) {
+  resultCode?: string;
+
+  constructor(message: string, resultCode?: string) {
     super(message);
     this.name = "TourApiError";
+    this.resultCode = resultCode;
   }
 }
 
-type GalleryOperation =
-  | "galleryList1"
-  | "galleryDetailList1"
-  | "gallerySyncDetailList1"
-  | "gallerySearchList1";
-
-function getServiceKey(): string {
-  const key = process.env.TOUR_API_KEY;
-  if (!key) {
-    throw new Error("TOUR_API_KEY 환경변수가 설정되지 않았습니다.");
+export async function tourApiFetch<T>(
+  endpoint: string,
+  params: Record<string, string>,
+): Promise<{ item: T[]; totalCount: number }> {
+  const apiKey = process.env.TOUR_API_KEY;
+  if (!apiKey) {
+    throw new TourApiError("TOUR_API_KEY 환경변수가 설정되지 않았습니다.");
   }
-  return key;
-}
 
-export async function callGalleryApi<T>(
-  operation: GalleryOperation,
-  params: Record<string, string | number | undefined>,
-): Promise<TourApiBody<T>> {
-  const searchParams = new URLSearchParams({
-    serviceKey: getServiceKey(),
-    MobileOS: "ETC",
-    MobileApp: "WhereIsIt",
-    _type: "json",
-  });
-
+  const url = new URL(`${TOUR_API_BASE_URL}/${endpoint}`);
+  url.searchParams.set("serviceKey", apiKey);
+  url.searchParams.set("MobileOS", "ETC");
+  url.searchParams.set("MobileApp", "WhereIsIt");
+  url.searchParams.set("_type", "json");
+  url.searchParams.set("numOfRows", params.numOfRows ?? "10");
+  url.searchParams.set("pageNo", params.pageNo ?? "1");
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) searchParams.set(key, String(value));
+    if (key === "numOfRows" || key === "pageNo") continue;
+    url.searchParams.set(key, value);
   }
 
-  const res = await fetch(`${BASE_URL}/${operation}?${searchParams.toString()}`);
-
+  const res = await fetch(url.toString());
   if (!res.ok) {
-    throw new TourApiError("HTTP_ERROR", `TourAPI 요청 실패: ${res.status} ${res.statusText}`);
+    throw new TourApiError(`TourAPI 요청 실패: HTTP ${res.status}`);
   }
 
-  const data: TourApiResponse<T> = await res.json();
-  const { header, body } = data.response;
+  const data = (await res.json()) as TourApiResponse<T> | TourApiFlatError;
 
-  if (header.resultCode !== SUCCESS_CODE) {
-    throw new TourApiError(header.resultCode, header.resultMsg);
+  if ("resultCode" in data && !("response" in data)) {
+    throw new TourApiError(`TourAPI 오류: ${data.resultMsg}`, data.resultCode);
   }
 
-  return body;
-}
+  const { header, body } = (data as TourApiResponse<T>).response;
+  if (header.resultCode !== "0000") {
+    throw new TourApiError(`TourAPI 오류: ${header.resultMsg}`, header.resultCode);
+  }
 
-export function normalizeItems<T>(items: TourApiBody<T>["items"]): T[] {
-  if (typeof items === "string" || !items.item) return [];
-  return Array.isArray(items.item) ? items.item : [items.item];
+  if (body.items === "") {
+    return { item: [], totalCount: 0 };
+  }
+  return { item: body.items.item, totalCount: body.totalCount };
 }
