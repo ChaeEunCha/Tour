@@ -25,10 +25,12 @@ export default async function SimilarMatchResultPage({
     notFound();
   }
 
-  // F-04: 상위 3건을 정확도(%) 내림차순으로 나열
-  const results = ((data.top_matches ?? []) as PlaceMatch[]).slice().sort(
+  // 1위(가장 정확히 일치하는 곳)는 /match/exact 플로우에서 따로 보여주므로
+  // 여기서는 제외하고, 2~4위만 "비슷한 관광지"로 보여준다.
+  const sorted = ((data.top_matches ?? []) as PlaceMatch[]).slice().sort(
     (a, b) => b.accuracyPercent - a.accuracyPercent
   );
+  const results = sorted.slice(1);
   const hasLowAccuracy = results.some((r) => r.accuracyPercent < 40);
 
   return (

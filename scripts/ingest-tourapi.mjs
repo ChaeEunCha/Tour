@@ -15,7 +15,13 @@
 // 주의: 여기서 추출하는 임베딩은 반드시 src/lib/embedding/clip.ts와 동일한 모델
 // (기본값 Xenova/clip-vit-base-patch32)을 써야 한다. 모델을 바꾸면 기존에 쌓인
 // place_embeddings와 코사인 유사도 비교가 더 이상 의미를 갖지 않으므로 전부 재적재해야 한다.
-// 재실행해도 안전하도록, 이미 임베딩이 있는 장소는 건너뛴다(중복 적재 방지).
+//
+// 장소당 firstimage 1장만으로는 사용자가 다른 각도/구도로 찍은 사진과 코사인
+// 유사도가 잘 나오지 않아, KorService2 detailImage2(장소별 추가 이미지)로
+// 같은 장소의 여러 각도 사진을 가져와 장소당 최대 MAX_IMAGES_PER_PLACE장까지 채운다.
+// (관광사진갤러리 PhotoGalleryService1은 별도 활용신청이 필요한 API라 이 서비스키로는
+// 403이 나서 쓸 수 없었다 — 같은 KorService2 상품인 detailImage2로 대체.)
+// 재실행해도 안전하도록, 이미 그 개수만큼 채워진 장소는 건너뛴다(중복 적재 방지).
 
 import fs from "node:fs";
 import { createClient } from "@supabase/supabase-js";
@@ -174,10 +180,55 @@ async function embedImageUrl(url) {
   return Array.from(output.data);
 }
 
-async function ingestItems(supabase, items, totals) {
+// 장소 하나당 여러 각도/구도의 참고 이미지를 쌓아야 실제 사용자가 다른 각도로
+// 찍은 사진과도 코사인 유사도가 높게 나온다 (기존엔 firstimage 1장뿐이라
+// 조금만 각도/구도가 달라도 유사도가 크게 떨어졌음). detailImage2가 보통
+// 6장 이상을 반환하므로 그 안에서 최대 MAX_IMAGES_PER_PLACE장까지 채운다.
+const MAX_IMAGES_PER_PLACE = 6;
+
+async function fetchDetailImages(env, contentId) {
+  const params = new URLSearchParams({
+    serviceKey: env.TOUR_API_KEY,
+    MobileOS: "ETC",
+    MobileApp: "WhereIsIt",
+    _type: "json",
+    contentId: String(contentId),
+    imageYN: "Y",
+  });
+  const url = `https://apis.data.go.kr/B551011/KorService2/detailImage2?${params.toString()}`;
+  const res = await fetch(url);
+  if (!res.ok) return [];
+  const data = await res.json();
+  const header = data.response?.header;
+  if (header?.resultCode !== "0000") return [];
+  const items = data.response.body.items;
+  if (!items || items === "") return [];
+  const list = Array.isArray(items.item) ? items.item : [items.item];
+  return list.map((i) => i.originimgurl).filter(Boolean);
+}
+
+async function collectImageUrls(env, item) {
+  const urls = [];
+  const firstImage = item.firstimage || item.firstimage2;
+  if (firstImage) urls.push(firstImage);
+
+  try {
+    const detailUrls = await fetchDetailImages(env, item.contentid);
+    for (const url of detailUrls) {
+      if (!urls.includes(url)) urls.push(url);
+      if (urls.length >= MAX_IMAGES_PER_PLACE) break;
+    }
+  } catch {
+    // 추가 이미지 조회 실패해도 firstimage만으로 계속 진행
+  }
+
+  return urls.slice(0, MAX_IMAGES_PER_PLACE);
+}
+
+async function ingestItems(supabase, env, items, totals) {
   for (const item of items) {
-    const imageUrl = item.firstimage || item.firstimage2;
-    if (!imageUrl) {
+    const candidateUrls = await collectImageUrls(env, item);
+    if (candidateUrls.length === 0) {
       totals.skippedNoImage++;
       continue;
     }
@@ -204,42 +255,56 @@ async function ingestItems(supabase, items, totals) {
       continue;
     }
 
-    const { count } = await supabase
-      .from("place_embeddings")
-      .select("id", { count: "exact", head: true })
+    const { data: existingImages } = await supabase
+      .from("place_images")
+      .select("image_url")
       .eq("place_id", place.id);
-    if (count && count > 0) {
+    const existingUrls = new Set((existingImages ?? []).map((i) => i.image_url));
+
+    const newUrls = candidateUrls.filter((url) => !existingUrls.has(url));
+    const remainingSlots = MAX_IMAGES_PER_PLACE - existingUrls.size;
+    if (remainingSlots <= 0 || newUrls.length === 0) {
       totals.skippedAlready++;
       continue;
     }
 
-    const { data: placeImage, error: imageError } = await supabase
-      .from("place_images")
-      .insert({ place_id: place.id, image_url: imageUrl })
-      .select("id")
-      .single();
+    let addedForThisPlace = 0;
+    for (const imageUrl of newUrls.slice(0, remainingSlots)) {
+      const { data: placeImage, error: imageError } = await supabase
+        .from("place_images")
+        .insert({ place_id: place.id, image_url: imageUrl })
+        .select("id")
+        .single();
 
-    if (imageError || !placeImage) {
-      console.error(`  [실패] ${item.title}: 이미지 저장 실패 - ${imageError?.message}`);
-      totals.failed++;
-      continue;
+      if (imageError || !placeImage) {
+        console.error(`  [실패] ${item.title}: 이미지 저장 실패 - ${imageError?.message}`);
+        totals.failed++;
+        continue;
+      }
+
+      try {
+        const embedding = await embedImageUrl(imageUrl);
+        const { error: embeddingError } = await supabase
+          .from("place_embeddings")
+          .insert({
+            place_id: place.id,
+            place_image_id: placeImage.id,
+            embedding,
+          });
+        if (embeddingError) throw new Error(embeddingError.message);
+        addedForThisPlace++;
+      } catch (err) {
+        // 임베딩 실패 시 방금 넣은 place_images row를 남겨두면 다음 재실행에서
+        // "이미 있는 이미지"로 취급돼 영원히 재시도가 안 막힌다 — 롤백해서 슬롯을 비워둔다.
+        await supabase.from("place_images").delete().eq("id", placeImage.id);
+        console.error(`  [실패] ${item.title}: 임베딩 추출/저장 실패 - ${err.message}`);
+        totals.failed++;
+      }
     }
 
-    try {
-      const embedding = await embedImageUrl(imageUrl);
-      const { error: embeddingError } = await supabase
-        .from("place_embeddings")
-        .insert({
-          place_id: place.id,
-          place_image_id: placeImage.id,
-          embedding,
-        });
-      if (embeddingError) throw new Error(embeddingError.message);
-      totals.ingested++;
-      console.log(`  [완료] ${item.title}`);
-    } catch (err) {
-      console.error(`  [실패] ${item.title}: 임베딩 추출/저장 실패 - ${err.message}`);
-      totals.failed++;
+    if (addedForThisPlace > 0) {
+      totals.ingested += addedForThisPlace;
+      console.log(`  [완료] ${item.title}: 이미지 ${addedForThisPlace}장 추가`);
     }
   }
 }
@@ -265,7 +330,7 @@ async function main() {
     console.log(`=== 키워드 검색: "${opts.keyword}" ===`);
     const items = await fetchByKeyword(env, { keyword: opts.keyword, limit: 20 });
     console.log(`${items.length}건 조회됨`);
-    await ingestItems(supabase, items, totals);
+    await ingestItems(supabase, env, items, totals);
   } else {
     const areas =
       opts.area === "all"
@@ -278,7 +343,7 @@ async function main() {
       );
       const items = await fetchAreaBasedList(env, { ...opts, area: area.code });
       console.log(`${items.length}건 조회됨`);
-      await ingestItems(supabase, items, totals);
+      await ingestItems(supabase, env, items, totals);
     }
   }
 
