@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
     root: __dirname,
   },
   devIndicators: false,
+  // onnxruntime-node의 네이티브 .so 바이너리는 Vercel의 파일 트레이싱이
+  // 정적으로 감지하지 못해 서버리스 번들에서 누락된다 (libonnxruntime.so.1
+  // not found). CLIP 임베딩을 쓰는 /api/match에서만 명시적으로 포함시킨다.
+  outputFileTracingIncludes: {
+    "/api/match": ["node_modules/onnxruntime-node/bin/**/*"],
+  },
   images: {
     remotePatterns: [
       ...(supabaseHostname
