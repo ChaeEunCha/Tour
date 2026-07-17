@@ -14,9 +14,12 @@ create table if not exists saved_kakao_places (
   place_url text not null,
   longitude numeric not null,
   latitude numeric not null,
-  created_at timestamptz not null default now(),
-  unique (user_id, kakao_place_id, type)
+  created_at timestamptz not null default now()
 );
+
+alter table saved_kakao_places
+  add constraint saved_kakao_places_user_place_type_key
+  unique (user_id, kakao_place_id, type);
 
 alter table saved_kakao_places enable row level security;
 
