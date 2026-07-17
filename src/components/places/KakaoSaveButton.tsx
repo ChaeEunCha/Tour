@@ -16,6 +16,7 @@ export function KakaoSaveButton({ item, type }: KakaoSaveButtonProps) {
   const [saved, setSaved] = useState(false);
   const [savedRowId, setSavedRowId] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -50,17 +51,20 @@ export function KakaoSaveButton({ item, type }: KakaoSaveButtonProps) {
     }
 
     setPending(true);
+    setError(null);
     if (saved && savedRowId) {
-      const { error } = await supabase
+      const { error: deleteError } = await supabase
         .from("saved_kakao_places")
         .delete()
         .eq("id", savedRowId);
-      if (!error) {
+      if (deleteError) {
+        setError("저장 취소에 실패했어요");
+      } else {
         setSaved(false);
         setSavedRowId(null);
       }
     } else {
-      const { data, error } = await supabase
+      const { data, error: upsertError } = await supabase
         .from("saved_kakao_places")
         .upsert(
           {
@@ -80,7 +84,9 @@ export function KakaoSaveButton({ item, type }: KakaoSaveButtonProps) {
         )
         .select("id")
         .single();
-      if (!error && data) {
+      if (upsertError || !data) {
+        setError("저장에 실패했어요");
+      } else {
         setSaved(true);
         setSavedRowId(data.id);
       }
@@ -88,5 +94,14 @@ export function KakaoSaveButton({ item, type }: KakaoSaveButtonProps) {
     setPending(false);
   }
 
-  return <HeartToggle saved={saved} onClick={handleClick} disabled={pending} />;
+  return (
+    <div className="relative">
+      <HeartToggle saved={saved} onClick={handleClick} disabled={pending} />
+      {error && (
+        <span className="absolute top-full right-0 z-10 mt-1 w-max rounded-md bg-bg-raised px-2 py-1 text-xs whitespace-nowrap text-primary shadow-sm border border-border">
+          {error}
+        </span>
+      )}
+    </div>
+  );
 }
