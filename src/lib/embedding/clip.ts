@@ -1,4 +1,11 @@
-import { pipeline, RawImage } from "@huggingface/transformers";
+import { env, pipeline, RawImage } from "@huggingface/transformers";
+
+// Vercel 서버리스 함수는 배포 번들(node_modules 포함)이 읽기 전용이라
+// transformers.js 기본 캐시 경로(node_modules/@huggingface/transformers/.cache)에
+// 쓰기를 시도하면 ENOENT가 난다. 쓰기 가능한 /tmp로 캐시 경로를 옮긴다.
+if (process.env.VERCEL) {
+  env.cacheDir = "/tmp/transformers-cache/";
+}
 
 // CLIP 이미지 임베딩 추출 (F-03/F-04 공통 매칭 엔진의 1단계).
 //
