@@ -22,11 +22,25 @@ interface SavedPlaceRow {
   places: { name: string; category: string; address: string } | null;
 }
 
+interface SavedKakaoPlaceRow {
+  id: string;
+  place_name: string;
+  category_name: string;
+  address_name: string;
+}
+
+interface SavedListItem {
+  id: string;
+  name: string;
+  category: string;
+  address: string;
+}
+
 export default function MyPage() {
   const [user, setUser] = useState<User | null>(null);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [activeTab, setActiveTab] = useState<SavedType>("place");
-  const [items, setItems] = useState<SavedPlaceRow[]>([]);
+  const [items, setItems] = useState<SavedListItem[]>([]);
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
@@ -46,18 +60,47 @@ export default function MyPage() {
 
     let cancelled = false;
     const supabase = createClient();
-    supabase
-      .from("saved_places")
-      .select("id, place_id, places ( name, category, address )")
-      .eq("user_id", user.id)
-      .eq("type", activeTab)
-      .order("created_at", { ascending: false })
-      .returns<SavedPlaceRow[]>()
-      .then(({ data }) => {
-        if (cancelled) return;
-        setItems(data ?? []);
-        setLoadedFor(requestKey);
-      });
+
+    // 관광지(F-05, TourAPI 기준)는 saved_places+places, 먹거리/놀거리(카카오 로컬
+    // 결과, TourAPI contentId가 없음)는 별도 테이블 saved_kakao_places에서 읽는다.
+    const query =
+      activeTab === "place"
+        ? supabase
+            .from("saved_places")
+            .select("id, place_id, places ( name, category, address )")
+            .eq("user_id", user.id)
+            .eq("type", "place")
+            .order("created_at", { ascending: false })
+            .returns<SavedPlaceRow[]>()
+            .then(({ data }) =>
+              (data ?? []).map((row) => ({
+                id: row.id,
+                name: row.places?.name ?? "이름 없음",
+                category: row.places?.category ?? "관광지",
+                address: row.places?.address ?? "",
+              })),
+            )
+        : supabase
+            .from("saved_kakao_places")
+            .select("id, place_name, category_name, address_name")
+            .eq("user_id", user.id)
+            .eq("type", activeTab)
+            .order("created_at", { ascending: false })
+            .returns<SavedKakaoPlaceRow[]>()
+            .then(({ data }) =>
+              (data ?? []).map((row) => ({
+                id: row.id,
+                name: row.place_name,
+                category: row.category_name,
+                address: row.address_name,
+              })),
+            );
+
+    query.then((mapped) => {
+      if (cancelled) return;
+      setItems(mapped);
+      setLoadedFor(requestKey);
+    });
 
     return () => {
       cancelled = true;
@@ -67,10 +110,8 @@ export default function MyPage() {
   async function handleRemove(savedId: string) {
     setRemovingId(savedId);
     const supabase = createClient();
-    const { error } = await supabase
-      .from("saved_places")
-      .delete()
-      .eq("id", savedId);
+    const table = activeTab === "place" ? "saved_places" : "saved_kakao_places";
+    const { error } = await supabase.from(table).delete().eq("id", savedId);
 
     setRemovingId(null);
     if (!error) {
@@ -122,9 +163,9 @@ export default function MyPage() {
           items.map((item) => (
             <SavedItemCard
               key={item.id}
-              name={item.places?.name ?? "이름 없음"}
-              category={item.places?.category ?? activeLabel}
-              address={item.places?.address ?? ""}
+              name={item.name}
+              category={item.category}
+              address={item.address}
               onRemove={() => handleRemove(item.id)}
               removing={removingId === item.id}
             />

@@ -14,8 +14,14 @@ declare global {
       constructor(src: string, size: Size);
     }
 
+    class LatLngBounds {
+      constructor();
+      extend(latlng: LatLng): void;
+    }
+
     class Map {
       constructor(container: HTMLElement, options: { center: LatLng; level: number });
+      setBounds(bounds: LatLngBounds): void;
     }
 
     class Marker {
