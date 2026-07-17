@@ -10,6 +10,15 @@ const MARKER_COLORS = {
   play: "#2E9E5B",
 } as const;
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function createMarkerImage(kakaoSdk: typeof window.kakao, color: string) {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="32" height="40" viewBox="0 0 32 40">` +
@@ -52,9 +61,11 @@ export function PlaceMap({ place, food, play }: PlaceMapProps) {
           image: createMarkerImage(kakaoSdk, color),
           title: label,
         });
+        const safeLabel = escapeHtml(label);
+        const safeDetail = detail ? escapeHtml(detail) : undefined;
         const info = new kakaoSdk.maps.InfoWindow({
-          content: `<div style="padding:6px 10px;font-size:12px;">${label}${
-            detail ? `<br/>${detail}` : ""
+          content: `<div style="padding:6px 10px;font-size:12px;">${safeLabel}${
+            safeDetail ? `<br/>${safeDetail}` : ""
           }</div>`,
         });
         kakaoSdk.maps.event.addListener(marker, "click", () => info.open(map, marker));

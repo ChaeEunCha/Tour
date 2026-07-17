@@ -70,6 +70,46 @@ describe("searchNearby", () => {
     expect(result.play.map((p) => p.placeName)).toEqual(["명소"]);
   });
 
+  it("maps the raw string x/y/distance fields to numeric longitude/latitude/distance", async () => {
+    vi.stubEnv("KAKAO_REST_API_KEY", "test-key");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockImplementation(async (url: string) => {
+        const code = new URL(url).searchParams.get("category_group_code");
+        if (code === "AT4") {
+          return {
+            ok: true,
+            json: async () => ({
+              documents: [
+                mockDocument({
+                  category_group_code: "AT4",
+                  x: "129.556",
+                  y: "35.989",
+                  distance: "50",
+                }),
+              ],
+              meta: { total_count: 1, is_end: true },
+            }),
+          };
+        }
+        return {
+          ok: true,
+          json: async () => ({ documents: [], meta: { total_count: 0, is_end: true } }),
+        };
+      }),
+    );
+
+    const result = await searchNearby(129.556, 35.989, 1000);
+    const place = result.play[0];
+
+    expect(place.longitude).toBe(129.556);
+    expect(place.latitude).toBe(35.989);
+    expect(place.distance).toBe(50);
+    expect(typeof place.longitude).toBe("number");
+    expect(typeof place.latitude).toBe("number");
+    expect(typeof place.distance).toBe("number");
+  });
+
   it("throws KakaoApiError with the API's message when OPEN_MAP_AND_LOCAL is disabled for the app", async () => {
     vi.stubEnv("KAKAO_REST_API_KEY", "test-key");
     vi.stubGlobal(
