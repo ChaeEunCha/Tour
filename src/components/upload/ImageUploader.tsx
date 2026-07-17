@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { SplashScreen } from "@/components/layout/SplashScreen";
+import { MapSearchLoading } from "@/components/upload/MapSearchLoading";
+import { Button } from "@/components/ui/Button";
 
 interface ImageUploaderProps {
   onSubmit: (file: File) => Promise<void>;
@@ -42,7 +43,7 @@ export function ImageUploader({ onSubmit, submitLabel }: ImageUploaderProps) {
 
   return (
     <div className="flex w-full max-w-md flex-col items-center gap-4">
-      {isSubmitting && <SplashScreen message="장소를 찾고 있어요!" loading />}
+      {isSubmitting && <MapSearchLoading message="장소를 찾고 있어요!" />}
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
@@ -70,14 +71,14 @@ export function ImageUploader({ onSubmit, submitLabel }: ImageUploaderProps) {
         onChange={handleFileChange}
       />
       {error && <p className="text-sm text-red-600">{error}</p>}
-      <button
+      <Button
         type="button"
         onClick={handleSubmit}
-        disabled={isSubmitting}
-        className="w-full rounded-full bg-foreground px-5 py-3 font-medium text-background disabled:opacity-50"
+        disabled={!file || isSubmitting}
+        className="w-full"
       >
         {isSubmitting ? "찾는 중..." : submitLabel}
-      </button>
+      </Button>
     </div>
   );
 }

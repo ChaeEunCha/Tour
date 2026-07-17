@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: __dirname,
   },
+  devIndicators: false,
   images: {
     remotePatterns: [
       ...(supabaseHostname
