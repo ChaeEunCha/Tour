@@ -1,5 +1,6 @@
 import Image from "next/image";
 import type { PlaceDetail } from "@/lib/tourapi/types";
+import { PlaceSaveButton } from "./PlaceSaveButton";
 
 export function PlaceDetailCard({ place }: { place: PlaceDetail }) {
   return (
@@ -16,9 +17,19 @@ export function PlaceDetailCard({ place }: { place: PlaceDetail }) {
         </div>
       )}
       <div className="flex flex-col gap-1">
-        <span className="w-fit rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
-          {place.category}
-        </span>
+        <div className="flex items-start justify-between gap-3">
+          <span className="w-fit rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-accent">
+            {place.category}
+          </span>
+          <PlaceSaveButton
+            tourContentId={place.contentId}
+            name={place.title}
+            category={place.category}
+            address={place.address}
+            latitude={place.latitude}
+            longitude={place.longitude}
+          />
+        </div>
         <h1 className="text-xl font-semibold text-text">{place.title}</h1>
         <p className="text-sm text-text-muted">{place.address}</p>
       </div>

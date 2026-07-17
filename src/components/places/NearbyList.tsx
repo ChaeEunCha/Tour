@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { KakaoPlace } from "@/lib/kakao/local";
+import { KakaoSaveButton } from "./KakaoSaveButton";
 
 type Tab = "food" | "play";
 
@@ -52,9 +53,12 @@ export function NearbyList({ food, play }: { food: KakaoPlace[]; play: KakaoPlac
                   <span className="text-sm font-medium text-text">{item.placeName}</span>
                   <span className="text-xs text-text-muted">{item.categoryName}</span>
                 </div>
-                <span className="text-xs font-medium text-text-muted">
-                  {Math.round(item.distance)}m
-                </span>
+                <div className="flex items-center gap-3">
+                  <span className="text-xs font-medium text-text-muted">
+                    {Math.round(item.distance)}m
+                  </span>
+                  <KakaoSaveButton item={item} type={tab} />
+                </div>
               </li>
             ))}
           </ul>
