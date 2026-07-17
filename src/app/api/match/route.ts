@@ -5,6 +5,10 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getImageEmbedding, EmbeddingError } from "@/lib/embedding/clip";
 import { findMatchingPlaces, type MatchMode } from "@/lib/match/engine";
 
+// CLIP 모델 콜드 스타트(로딩) + 추론이 Vercel 기본 실행시간 제한(10초)을
+// 넘길 수 있어 Hobby 플랜에서 설정 가능한 최대치로 늘린다.
+export const maxDuration = 60;
+
 // 스크린샷·재전송 과정에서 GPS가 지워진 사진이 대부분이라 실패해도 조용히
 // 무시하고 GPS 없이(전국 검색) 계속 진행한다 — 있으면 보너스인 신호일 뿐.
 async function extractGpsLocation(buffer: Buffer) {
