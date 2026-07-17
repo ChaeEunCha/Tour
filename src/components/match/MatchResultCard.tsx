@@ -4,8 +4,8 @@ import { AccuracyBadge } from "./AccuracyBadge";
 
 export function MatchResultCard({ result }: { result: PlaceMatch }) {
   return (
-    <div className="flex gap-4 rounded-2xl border border-zinc-200 bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-zinc-100 dark:bg-zinc-800">
+    <div className="flex gap-4 rounded-2xl border border-border bg-bg-raised p-4">
+      <div className="h-24 w-24 flex-shrink-0 overflow-hidden rounded-xl bg-border">
         {result.thumbnailUrl && (
           <Image
             src={result.thumbnailUrl}
@@ -22,18 +22,12 @@ export function MatchResultCard({ result }: { result: PlaceMatch }) {
           <AccuracyBadge percent={result.accuracyPercent} band={result.band} />
         </div>
         {result.category && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {result.category}
-          </p>
+          <p className="text-sm text-text-muted">{result.category}</p>
         )}
         {result.address && (
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            {result.address}
-          </p>
+          <p className="text-sm text-text-muted">{result.address}</p>
         )}
-        <p className="mt-1 text-sm text-zinc-700 dark:text-zinc-300">
-          {result.message}
-        </p>
+        <p className="mt-1 text-sm text-text">{result.message}</p>
       </div>
     </div>
   );
