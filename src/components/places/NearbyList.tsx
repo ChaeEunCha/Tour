@@ -5,9 +5,15 @@ import type { KakaoPlace } from "@/lib/kakao/local";
 
 type Tab = "food" | "play";
 
+const INITIAL_VISIBLE_COUNT = 6;
+
 export function NearbyList({ food, play }: { food: KakaoPlace[]; play: KakaoPlace[] }) {
   const [tab, setTab] = useState<Tab>("food");
+  const [expandedTabs, setExpandedTabs] = useState<Set<Tab>>(new Set());
   const items = tab === "food" ? food : play;
+  const isExpanded = expandedTabs.has(tab);
+  const visibleItems = isExpanded ? items : items.slice(0, INITIAL_VISIBLE_COUNT);
+  const hasMore = items.length > INITIAL_VISIBLE_COUNT && !isExpanded;
 
   return (
     <section className="flex flex-col gap-3">
@@ -35,22 +41,33 @@ export function NearbyList({ food, play }: { food: KakaoPlace[]; play: KakaoPlac
       {items.length === 0 ? (
         <p className="text-sm text-text-muted">반경 내에 결과가 없어요.</p>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {items.map((item) => (
-            <li
-              key={item.id}
-              className="flex items-center justify-between rounded-[12px] border border-border bg-bg-raised px-4 py-3"
+        <>
+          <ul className="flex flex-col gap-2">
+            {visibleItems.map((item) => (
+              <li
+                key={item.id}
+                className="flex items-center justify-between rounded-[12px] border border-border bg-bg-raised px-4 py-3"
+              >
+                <div className="flex flex-col gap-0.5">
+                  <span className="text-sm font-medium text-text">{item.placeName}</span>
+                  <span className="text-xs text-text-muted">{item.categoryName}</span>
+                </div>
+                <span className="text-xs font-medium text-text-muted">
+                  {Math.round(item.distance)}m
+                </span>
+              </li>
+            ))}
+          </ul>
+          {hasMore && (
+            <button
+              type="button"
+              onClick={() => setExpandedTabs((prev) => new Set(prev).add(tab))}
+              className="w-full rounded-[12px] border border-border bg-bg-raised py-2.5 text-sm font-medium text-text-muted transition-colors hover:text-text"
             >
-              <div className="flex flex-col gap-0.5">
-                <span className="text-sm font-medium text-text">{item.placeName}</span>
-                <span className="text-xs text-text-muted">{item.categoryName}</span>
-              </div>
-              <span className="text-xs font-medium text-text-muted">
-                {Math.round(item.distance)}m
-              </span>
-            </li>
-          ))}
-        </ul>
+              더보기 ({items.length - INITIAL_VISIBLE_COUNT}개 더)
+            </button>
+          )}
+        </>
       )}
     </section>
   );
