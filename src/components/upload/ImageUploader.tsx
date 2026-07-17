@@ -47,7 +47,7 @@ export function ImageUploader({ onSubmit, submitLabel }: ImageUploaderProps) {
       <button
         type="button"
         onClick={() => inputRef.current?.click()}
-        className="flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-zinc-300 bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900"
+        className="flex h-64 w-full items-center justify-center overflow-hidden rounded-2xl border-2 border-dashed border-border bg-bg-raised"
       >
         {previewUrl ? (
           // 로컬 blob 미리보기이므로 next/image 대신 일반 img 사용
@@ -58,7 +58,7 @@ export function ImageUploader({ onSubmit, submitLabel }: ImageUploaderProps) {
             className="h-full w-full object-cover"
           />
         ) : (
-          <span className="text-zinc-500 dark:text-zinc-400">
+          <span className="text-text-muted">
             탭해서 사진 선택
           </span>
         )}

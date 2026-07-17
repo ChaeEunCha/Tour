@@ -46,13 +46,13 @@ export default async function ExactMatchResultPage({
         <div className="w-full max-w-md">
           <MatchResultCard result={top} />
           {top.accuracyPercent < 40 && (
-            <p className="mt-3 text-center text-xs text-zinc-500 dark:text-zinc-400">
+            <p className="mt-3 text-center text-xs text-text-muted">
               {LOW_ACCURACY_DISCLAIMER}
             </p>
           )}
         </div>
       ) : (
-        <p className="text-zinc-500 dark:text-zinc-400">
+        <p className="text-text-muted">
           아직 등록된 관광지 데이터가 없어 결과를 보여드릴 수 없어요.
         </p>
       )}
