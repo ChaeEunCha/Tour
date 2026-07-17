@@ -5,6 +5,7 @@ export type MatchMode = "exact" | "similar";
 
 export interface PlaceMatch {
   placeId: string;
+  tourContentId: string;
   name: string;
   category: string | null;
   address: string | null;
@@ -52,7 +53,7 @@ export async function findMatchingPlaces(
     await Promise.all([
       supabase
         .from("places")
-        .select("id, name, category, address")
+        .select("id, tour_content_id, name, category, address")
         .in("id", placeIds),
       supabase
         .from("place_images")
@@ -77,6 +78,7 @@ export async function findMatchingPlaces(
     const accuracy = getAccuracyInfo(m.similarity);
     return {
       placeId: m.place_id,
+      tourContentId: place?.tour_content_id ?? "",
       name: place?.name ?? "알 수 없는 장소",
       category: place?.category ?? null,
       address: place?.address ?? null,
