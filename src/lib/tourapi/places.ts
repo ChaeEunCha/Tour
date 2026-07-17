@@ -90,8 +90,8 @@ export async function getPlaceDetail(contentId: string): Promise<PlaceDetail | n
   if (!common) return null;
 
   const [intro, images] = await Promise.all([
-    getDetailIntro(contentId, common.contenttypeid),
-    getDetailImages(contentId),
+    getDetailIntro(contentId, common.contenttypeid).catch(() => null),
+    getDetailImages(contentId).catch(() => []),
   ]);
 
   const gallery = images.map((image) => image.originimgurl).filter(Boolean);

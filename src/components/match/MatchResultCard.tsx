@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 import type { PlaceMatch } from "@/lib/match/engine";
 import { AccuracyBadge } from "./AccuracyBadge";
 
@@ -28,6 +29,14 @@ export function MatchResultCard({ result }: { result: PlaceMatch }) {
           <p className="text-sm text-text-muted">{result.address}</p>
         )}
         <p className="mt-1 text-sm text-text">{result.message}</p>
+        {result.tourContentId && (
+          <Link
+            href={`/places/${result.tourContentId}`}
+            className="mt-2 w-fit rounded-full bg-primary px-4 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-primary-hover"
+          >
+            상세정보 보기
+          </Link>
+        )}
       </div>
     </div>
   );
