@@ -1,8 +1,23 @@
 import { NextResponse } from "next/server";
+import { gps as readExifGps } from "exifr";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getImageEmbedding, EmbeddingError } from "@/lib/embedding/clip";
 import { findMatchingPlaces, type MatchMode } from "@/lib/match/engine";
+
+// 스크린샷·재전송 과정에서 GPS가 지워진 사진이 대부분이라 실패해도 조용히
+// 무시하고 GPS 없이(전국 검색) 계속 진행한다 — 있으면 보너스인 신호일 뿐.
+async function extractGpsLocation(buffer: Buffer) {
+  try {
+    const gps = await readExifGps(buffer);
+    if (!gps || typeof gps.latitude !== "number" || typeof gps.longitude !== "number") {
+      return undefined;
+    }
+    return { latitude: gps.latitude, longitude: gps.longitude };
+  } catch {
+    return undefined;
+  }
+}
 
 // 비기능 요구사항: 이미지 업로드 용량 제한 10MB
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -81,8 +96,11 @@ export async function POST(request: Request) {
       data: { publicUrl: uploadedImageUrl },
     } = admin.storage.from("uploads").getPublicUrl(storagePath);
 
-    const embedding = await getImageEmbedding(buffer, file.type);
-    const results = await findMatchingPlaces(admin, embedding, matchMode);
+    const [embedding, gps] = await Promise.all([
+      getImageEmbedding(buffer, file.type),
+      extractGpsLocation(buffer),
+    ]);
+    const results = await findMatchingPlaces(admin, embedding, matchMode, gps);
 
     const top = results[0];
     if (!top) {
