@@ -43,3 +43,24 @@ body {
   color: var(--color-text);
   font-family: var(--font-sans);
 }
+
+@keyframes map-search {
+  0% {
+    transform: translate(-52px, -38px) rotate(-6deg);
+  }
+  22% {
+    transform: translate(34px, -46px) rotate(4deg);
+  }
+  45% {
+    transform: translate(46px, 30px) rotate(-4deg);
+  }
+  68% {
+    transform: translate(-30px, 40px) rotate(6deg);
+  }
+  86% {
+    transform: translate(-10px, -6px) rotate(-2deg);
+  }
+  100% {
+    transform: translate(-52px, -38px) rotate(-6deg);
+  }
+}
