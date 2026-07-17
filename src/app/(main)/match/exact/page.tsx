@@ -26,7 +26,7 @@ export default function ExactMatchPage() {
     <div className="flex flex-1 flex-col items-center gap-6 px-6 py-16">
       <div className="text-center">
         <h1 className="text-2xl font-bold">정확히 일치하는 곳 찾기</h1>
-        <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 text-text-muted">
           사진을 올리면 가장 일치하는 관광지 1곳을 정확도와 함께 알려드려요
         </p>
       </div>

@@ -26,7 +26,7 @@ export default function SimilarMatchPage() {
     <div className="flex flex-1 flex-col items-center gap-6 px-6 py-16">
       <div className="text-center">
         <h1 className="text-2xl font-bold">유사한 관광지 찾기</h1>
-        <p className="mt-2 text-zinc-500 dark:text-zinc-400">
+        <p className="mt-2 text-text-muted">
           사진을 올리면 분위기가 비슷한 관광지 상위 3곳을 보여드려요
         </p>
       </div>
